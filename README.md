@@ -1,20 +1,31 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# VPet - AI 智能桌宠
 
-# Run and deploy your AI Studio app
+> 这是一款改良版桌宠，不仅仅是普通的陪伴，更是你的 AI 助手。
 
-This contains everything you need to run your app locally.
+## ✨ 主要功能
 
-View your app in AI Studio: https://ai.studio/apps/drive/1eIvdyVlk6P9NxJyHQTAagX-fH6QHMtDO
+* **三种模式切换**：拥有 **学习**、**工作** 和 **玩耍** 三个模式，适应你的不同状态。
+* **AI 智能问答**：它像 AI 助手一样回答你的问题，支持上传图片进行分析解答。
+* **情绪价值**：能够感知互动，为你提供情绪支持。
+* **个性化定制**：你可以根据自己的喜好选择桌宠的形象和主题颜色。
 
-## Run Locally
+---
 
-**Prerequisites:**  Node.js
+## 🛠️ 如何运行 (Run Locally)
 
+如果你想在本地运行这个项目，请按照以下步骤操作：
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+**前置要求**: 需要安装 [Node.js](https://nodejs.org/)。
+
+1.  **安装依赖**:
+    ```bash
+    npm install
+    ```
+
+2.  **配置 API**:
+    在 `.env.local` 文件中设置你的 `GEMINI_API_KEY` (Gemini API 密钥)。
+
+3.  **启动应用**:
+    ```bash
+    npm run dev
+    ```
