@@ -1,11 +1,11 @@
 # VPet - AI 智能桌宠
 
 > 这是一款改良版桌宠，不仅仅是普通的陪伴，更是你的 AI 助手。
-<div align="center">
-  <img src="<img width="1266" height="586" alt="Image" src="https://github.com/user-attachments/assets/ee9d1852-df04-4bbd-b273-f1bb8fe8fd8e" />" width="800" alt="VPet 界面预览" />
-  <br>
-  <em>当前开发进度预览：学习模式下的 Chiichan 与 AI 对话演示</em>
-</div>
+1 | # VPet - AI 智能桌宠
+2 |
+3 | <div align="center">
+4 |   <img src="[...](https://github.com/user-attachments/assets/ee9d1852-df04-4bbd-b273-f1bb8fe8fd8e")" />   
+5 | </div>
 ## ✨ 主要功能
 
 * **三种模式切换**：拥有 **学习**、**工作** 和 **玩耍** 三个模式，适应你的不同状态。
