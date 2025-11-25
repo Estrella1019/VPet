@@ -6,7 +6,7 @@
 <div align="center">
   <img src="https://github.com/user-attachments/assets/ee9d1852-df04-4bbd-b273-f1bb8fe8fd8e" />  
   </div>
-## ✨ 主要功能
+ ✨ 主要功能
 
 * **三种模式切换**：拥有 **学习**、**工作** 和 **玩耍** 三个模式，适应你的不同状态。
 * **AI 智能问答**：它像 AI 助手一样回答你的问题，支持上传图片进行分析解答。
@@ -15,7 +15,7 @@
 
 ---
 
-## 🛠️ 如何运行 (Run Locally)
+ 🛠️ 如何运行 (Run Locally)
 
 如果你想在本地运行这个项目，请按照以下步骤操作：
 
