@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nexus VPet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#fb7185', // Rose 400 (Strawberry)
+              secondary: '#38bdf8', // Sky 400 (Blueberry)
+              accent: '#fde047', // Yellow 300 (Lemon)
+              background: '#fffbeb', // Amber 50 (Cream)
+              surface: '#ffffff', // White
+              textMain: '#422006', // Brown 900 (Chocolate)
+              textSub: '#a8a29e', // Stone 400
+              pinkSoft: '#fce7f3',
+              blueSoft: '#e0f2fe',
+            },
+            fontFamily: {
+              sans: ['"Varela Round"', 'ui-rounded', 'SF Pro Rounded', 'system-ui', 'sans-serif'],
+            },
+            animation: {
+              'bounce-slow': 'bounce-gentle 3s infinite',
+              'bounce-fast': 'bounce 1s infinite',
+              'wiggle': 'wiggle 2s ease-in-out infinite',
+              'float': 'float 4s ease-in-out infinite',
+              'pulse-soft': 'pulse-soft 2s infinite',
+            },
+            keyframes: {
+              'bounce-gentle': {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
+              },
+              wiggle: {
+                '0%, 100%': { transform: 'rotate(-3deg)' },
+                '50%': { transform: 'rotate(3deg)' },
+              },
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-6px)' },
+              },
+              'pulse-soft': {
+                '0%, 100%': { opacity: '1' },
+                '50%': { opacity: '0.7' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+    <style>
+      body {
+        background-color: #fffbeb;
+        color: #422006;
+        font-family: 'Varela Round', sans-serif;
+      }
+      /* Cute Scrollbar */
+      ::-webkit-scrollbar {
+        width: 10px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #fff1f2; 
+        border-radius: 5px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #fecdd3; 
+        border-radius: 5px;
+        border: 2px solid #fff1f2;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #fb7185; 
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
