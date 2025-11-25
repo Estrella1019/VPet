@@ -1,11 +1,11 @@
 # VPet - AI 智能桌宠
 
 > 这是一款改良版桌宠，不仅仅是普通的陪伴，更是你的 AI 助手。
-1 | # VPet - AI 智能桌宠
-2 |
-3 | <div align="center">
-4 |   <img src="[...](https://github.com/user-attachments/assets/ee9d1852-df04-4bbd-b273-f1bb8fe8fd8e")" />   
-5 | </div>
+
+
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/ee9d1852-df04-4bbd-b273-f1bb8fe8fd8e" />  
+  </div>
 ## ✨ 主要功能
 
 * **三种模式切换**：拥有 **学习**、**工作** 和 **玩耍** 三个模式，适应你的不同状态。
