@@ -44,3 +44,12 @@ export interface UserStats {
   sessionTimeMinutes: number;
   healthScore: number;
 }
+
+
+// types.ts
+export interface UserProfile {
+  name: string;      // 用户昵称
+  mood: string;      // 用户最近的心情 (e.g. "开心", "焦虑")
+  coins: number;     // 金币数量 (用于游戏化)
+  historySummary: string; // 简短的对话历史总结
+}
