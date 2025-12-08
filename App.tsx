@@ -5,43 +5,69 @@ import ChatInterface from './components/ChatInterface';
 import StatsPanel from './components/StatsPanel';
 import { sendMessageToGemini } from './services/geminiService';
 
+// --- 扩展类型定义 (为了支持金币系统，防止TS报错) ---
+// 如果你更新了 types.ts 中的 UserStats 包含 coins，可以删掉这个
+interface ExtendedUserStats extends UserStats {
+  coins: number;
+}
+
 const App: React.FC = () => {
-  // --- State ---
+  // --- State Initialization (with Memory/LocalStorage) ---
+
   const [mode, setMode] = useState<UserMode>(UserMode.STUDENT);
   const [petState, setPetState] = useState<PetState>(PetState.IDLE);
+  
   const [messages, setMessages] = useState<Message[]>([
-    { id: 'init-1', role: 'model', text: 'Hello friend! I am so happy to see you! (◕‿◕)', timestamp: new Date() }
+    { id: 'init-1', role: 'model', text: 'Hello friend! I remember you! Ready to work hard today? (◕‿◕)', timestamp: new Date() }
   ]);
+  
   const [inputText, setInputText] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const [selectedFile, setSelectedFile] = useState<Attachment | null>(null);
-  
-  // Customization
   const [isCustomizing, setIsCustomizing] = useState(false);
-  const [petAppearance, setPetAppearance] = useState<PetAppearance>({
-    name: 'Chiichan',
-    species: 'bear',
-    outfit: 'everyday',
-    primaryColor: 'pink'
+  const [notification, setNotification] = useState<string | null>(null);
+
+  // 1. 记忆功能：从 LocalStorage 读取外观设置
+  const [petAppearance, setPetAppearance] = useState<PetAppearance>(() => {
+    const saved = localStorage.getItem('vpet_appearance');
+    return saved ? JSON.parse(saved) : {
+      name: 'Chiichan',
+      species: 'bear',
+      outfit: 'everyday',
+      primaryColor: 'pink'
+    };
   });
   
-  const [stats, setStats] = useState<UserStats>({
-    intimacy: 30,
-    level: 3,
-    sessionTimeMinutes: 0,
-    healthScore: 100
+  // 2. 记忆功能 & 游戏化：从 LocalStorage 读取状态 (包含金币)
+  const [stats, setStats] = useState<ExtendedUserStats>(() => {
+    const saved = localStorage.getItem('vpet_stats');
+    return saved ? JSON.parse(saved) : {
+      intimacy: 30,
+      level: 3,
+      sessionTimeMinutes: 0,
+      healthScore: 100,
+      coins: 0 // 初始金币
+    };
   });
 
-  const [notification, setNotification] = useState<string | null>(null);
+  // --- Persistence Effects (自动保存) ---
+  useEffect(() => {
+    localStorage.setItem('vpet_appearance', JSON.stringify(petAppearance));
+  }, [petAppearance]);
+
+  useEffect(() => {
+    localStorage.setItem('vpet_stats', JSON.stringify(stats));
+  }, [stats]);
 
   // --- Logic ---
 
-  // Timer
+  // Timer & Gamification Loop
   useEffect(() => {
     const timer = setInterval(() => {
       setStats(prev => {
         const newTime = prev.sessionTimeMinutes + 1;
         let newHealth = prev.healthScore;
+        let newCoins = prev.coins;
         
         // Health check
         if (newTime % 45 === 0 && newTime > 0) {
@@ -51,27 +77,58 @@ const App: React.FC = () => {
            setTimeout(() => setPetState(PetState.IDLE), 5000);
         }
 
+        // 3. 游戏化：只有在学习或工作模式下才产出金币
+        if (mode === UserMode.STUDENT || mode === UserMode.WORK) {
+          // 每分钟 +2 金币
+          newCoins += 2; 
+        }
+
         return {
           ...prev,
           sessionTimeMinutes: newTime,
           healthScore: newHealth,
-          intimacy: Math.min(100, prev.intimacy)
+          intimacy: Math.min(100, prev.intimacy),
+          coins: newCoins
         };
       });
-    }, 60000); 
+    }, 60000); // 每60秒触发一次
 
     return () => clearInterval(timer);
-  }, []);
+  }, [mode]); // 依赖 mode，这样切换模式时计时器逻辑会更新
 
   const handleModeChange = (newMode: UserMode) => {
     setMode(newMode);
     const systemMsg: Message = {
       id: Date.now().toString(),
       role: 'model',
-      text: `Let's switch to ${newMode} Mode! I'll do my best! ✨`,
+      text: `Switched to ${newMode} Mode! ${newMode !== UserMode.LEISURE ? 'Earning coins enabled! 💰' : 'Time to spend some coins!'}`,
       timestamp: new Date()
     };
     setMessages(prev => [...prev, systemMsg]);
+  };
+
+  // 4. 游戏化：互动消费功能
+  const handleInteract = () => {
+    if (mode !== UserMode.LEISURE) {
+      setNotification("Switch to Play Mode to interact! 🎮");
+      return;
+    }
+
+    if (stats.coins >= 10) {
+      setStats(prev => ({
+        ...prev,
+        coins: prev.coins - 10,
+        intimacy: Math.min(100, prev.intimacy + 5),
+        healthScore: Math.min(100, prev.healthScore + 5)
+      }));
+      setPetState(PetState.HAPPY);
+      setNotification("Yummy! That snack was delicious! 🍩 (-10 Coins)");
+      setTimeout(() => setPetState(PetState.IDLE), 2000);
+    } else {
+      setNotification("Not enough coins! Go study to earn more! 💸");
+      setPetState(PetState.WORRIED);
+      setTimeout(() => setPetState(PetState.IDLE), 2000);
+    }
   };
 
   const handleFileSelect = (file: File) => {
@@ -92,7 +149,8 @@ const App: React.FC = () => {
     if (!inputText.trim() && !selectedFile) return;
 
     const currentAttachments = selectedFile ? [selectedFile] : undefined;
-
+    
+    // UI上显示的消息（保持原样）
     const userMsg: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -103,11 +161,27 @@ const App: React.FC = () => {
 
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
-    setSelectedFile(null); // Clear file after sending
+    setSelectedFile(null);
     setIsThinking(true);
     setPetState(PetState.THINKING);
 
-    const responseText = await sendMessageToGemini(messages, inputText, mode, currentAttachments);
+    // 5. 核心创新：注入上下文记忆 (Context Injection)
+    // 我们不直接把 inputText 发给 API，而是包装一层
+    // 这样 Gemini 就知道它的名字、你的名字、金币数量和当前模式
+    const contextPrompt = `
+[System Context - Memory Injection]
+User Name: Owner
+Pet Name: ${petAppearance.name}
+Pet Species: ${petAppearance.species}
+Current Mode: ${mode}
+User Coins: ${stats.coins}
+Intimacy Level: ${stats.intimacy}
+Instruction: Act as the desktop pet described above. Be concise and cute.
+User Input: ${inputText}
+    `;
+
+    // 发送带有上下文的 prompt
+    const responseText = await sendMessageToGemini(messages, contextPrompt, mode, currentAttachments);
 
     const aiMsg: Message = {
       id: (Date.now() + 1).toString(),
@@ -123,14 +197,16 @@ const App: React.FC = () => {
     setStats(prev => ({
         ...prev,
         intimacy: Math.min(100, prev.intimacy + 2),
-        level: Math.floor((prev.intimacy + 2) / 20) + 1
+        level: Math.floor((prev.intimacy + 2) / 20) + 1,
+        // 每次对话也奖励少量金币
+        coins: prev.coins + 1 
     }));
 
     setTimeout(() => {
       setPetState(PetState.IDLE);
     }, 4000);
 
-  }, [inputText, messages, mode, selectedFile]);
+  }, [inputText, messages, mode, selectedFile, petAppearance, stats.coins, stats.intimacy]);
 
   // --- Render ---
 
@@ -139,12 +215,9 @@ const App: React.FC = () => {
       
       {/* Decorative Background Elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-         {/* Cute Clouds */}
          <div className="absolute top-10 right-20 text-6xl opacity-20 animate-float">☁️</div>
          <div className="absolute top-40 left-10 text-6xl opacity-20 animate-float" style={{animationDelay: '1s'}}>☁️</div>
          <div className="absolute bottom-20 right-40 text-6xl opacity-20 animate-float" style={{animationDelay: '2s'}}>☁️</div>
-         
-         {/* Polka Dot Pattern */}
          <div className="absolute inset-0 opacity-[0.4]" 
               style={{ backgroundImage: 'radial-gradient(#fecdd3 2px, transparent 2px)', backgroundSize: '30px 30px' }}>
          </div>
@@ -153,9 +226,9 @@ const App: React.FC = () => {
       {/* Notification Bubble */}
       {notification && (
         <div className="absolute top-6 left-1/2 transform -translate-x-1/2 bg-white border-2 border-primary text-textMain px-6 py-4 rounded-3xl shadow-[0_10px_20px_rgba(251,113,133,0.3)] z-50 animate-bounce-gentle flex items-center gap-3">
-            <span className="text-2xl">⏰</span>
+            <span className="text-2xl">🔔</span>
             <div className="flex flex-col">
-               <span className="text-xs font-black text-primary uppercase tracking-wider">Reminder</span>
+               <span className="text-xs font-black text-primary uppercase tracking-wider">Notification</span>
                <span className="font-bold text-sm">{notification}</span>
             </div>
             <button onClick={() => setNotification(null)} className="ml-4 text-gray-400 hover:text-primary font-bold bg-gray-50 w-6 h-6 rounded-full flex items-center justify-center">✕</button>
@@ -166,7 +239,6 @@ const App: React.FC = () => {
       {isCustomizing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm p-4">
           <div className="bg-white rounded-[2.5rem] shadow-2xl p-8 w-full max-w-md border-4 border-white ring-4 ring-secondary/30 animate-bounce-gentle relative overflow-hidden">
-             
              {/* Header */}
              <div className="text-center mb-6">
                 <h2 className="text-3xl font-black text-textMain mb-1">Dressing Room</h2>
@@ -269,7 +341,7 @@ const App: React.FC = () => {
            </div>
         </div>
 
-        {/* Profile Card */}
+        {/* Profile Card & Coins Display */}
         <div className="bg-white rounded-3xl p-4 border-2 border-gray-50 shadow-sm flex flex-col gap-3 group hover:shadow-md transition-all">
             <div className="flex items-center justify-between">
                <div className="font-black text-lg text-textMain">{petAppearance.name}</div>
@@ -280,10 +352,25 @@ const App: React.FC = () => {
                  ✎
                </button>
             </div>
-            <div className="flex gap-2 text-xs font-bold text-textSub uppercase">
+            <div className="flex gap-2 text-xs font-bold text-textSub uppercase items-center">
                <span className="bg-gray-100 px-2 py-1 rounded-lg">Lv. {stats.level}</span>
-               <span className="bg-gray-100 px-2 py-1 rounded-lg">{petAppearance.species}</span>
+               <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-lg flex items-center gap-1">
+                 💰 {stats.coins}
+               </span>
             </div>
+            
+            {/* 6. 游戏化：花钱的按钮 */}
+            <button 
+              onClick={handleInteract}
+              disabled={mode !== UserMode.LEISURE}
+              className={`mt-2 w-full py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                mode === UserMode.LEISURE 
+                  ? 'bg-primary text-white hover:bg-red-500 shadow-lg shadow-red-200' 
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              {mode === UserMode.LEISURE ? 'Give Snack (10 Coins) 🍩' : 'Play Mode Only'}
+            </button>
         </div>
 
         {/* Mode Toggles */}
@@ -291,22 +378,25 @@ const App: React.FC = () => {
           <label className="text-xs font-black text-textSub uppercase tracking-widest pl-1">Current Mood</label>
           <div className="grid grid-cols-1 gap-3">
             {[
-               { m: UserMode.STUDENT, icon: '📚', label: 'Study Time', color: 'bg-blue-100 text-blue-600' },
-               { m: UserMode.WORK, icon: '💼', label: 'Work Focus', color: 'bg-green-100 text-green-600' },
-               { m: UserMode.LEISURE, icon: '🎮', label: 'Play Time', color: 'bg-pink-100 text-pink-600' }
+               { m: UserMode.STUDENT, icon: '📚', label: 'Study Time', sub:'Earn Coins', color: 'bg-blue-100 text-blue-600' },
+               { m: UserMode.WORK, icon: '💼', label: 'Work Focus', sub:'Earn Coins', color: 'bg-green-100 text-green-600' },
+               { m: UserMode.LEISURE, icon: '🎮', label: 'Play Time', sub:'Spend Coins', color: 'bg-pink-100 text-pink-600' }
             ].map((item) => (
               <button
                 key={item.m}
                 onClick={() => handleModeChange(item.m)}
-                className={`px-4 py-4 rounded-2xl flex items-center gap-3 transition-all border-2 ${
+                className={`px-4 py-3 rounded-2xl flex items-center gap-3 transition-all border-2 ${
                   mode === item.m 
                     ? 'bg-white border-primary shadow-lg scale-[1.02]' 
                     : 'bg-white/50 border-transparent hover:bg-white hover:scale-[1.01]'
                 }`}
               >
-                <span className={`w-8 h-8 rounded-full flex items-center justify-center ${item.color} text-lg`}>{item.icon}</span>
-                <span className="font-bold text-sm text-textMain">{item.label}</span>
-                {mode === item.m && <span className="ml-auto text-primary">●</span>}
+                <span className={`w-10 h-10 rounded-full flex items-center justify-center ${item.color} text-xl`}>{item.icon}</span>
+                <div className="flex flex-col items-start">
+                  <span className="font-bold text-sm text-textMain">{item.label}</span>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase">{item.sub}</span>
+                </div>
+                {mode === item.m && <span className="ml-auto text-primary text-xl">●</span>}
               </button>
             ))}
           </div>
